@@ -1,9 +1,13 @@
 #config.r
-source('S:/Roman/R/Research/Classifiers/methods.R')
+
+source('backtester.R')
+source('methods.R')
+
 
 require(MASS)
 require(nnet)
 require(class)
+require(lubridate)
 
 config <- list("Crosses" = c("EURGBP", "EURAUD", "EURNZD", "EURUSD", "EURCAD", "EURCHF", "EURNOK", "EURSEK", "EURJPY",
                              "GBPAUD", "GBPNZD", "GBPUSD", "GBPCAD", "GBPCHF", "GBPNOK", "GBPSEK", "GBPJPY",

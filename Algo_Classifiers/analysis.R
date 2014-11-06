@@ -1,5 +1,6 @@
 #analysis.r
-source('S:/Roman/R/Research/Classifiers/config.R')
+
+source('config.R')
 
 # Read in data, run a classifier for a given cross and column set
 # ---
@@ -42,7 +43,7 @@ my_res
 # Run classifiers in more of a backtest setting, where we predict each day and aggregate targets and then monitor implied forward performance
 # Note that we fit classifier once at start but, in practice, this can be re-fit at intervals...
 # ---
-my_params <- list("Model_XDataFile" = "S:/Roman/Data/misc_model_data_for_classifying2.csv",
+my_params <- list("Model_XDataFile" = "Data/SmallTestFile.csv",
                   "XData_To_Use" = c("Returns", "PC1", "PC2"),
                   "Fit_Window" = 250,
                   "Rolling_Window_Performance" = 10,
