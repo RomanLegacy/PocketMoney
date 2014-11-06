@@ -2,7 +2,15 @@
 
 Backtest_ClassifierAlgo <- function(inp_params) {
   # Perform a backtest of a specified classifier type using specified backtest parameters
-  #inp_params <- my_params
+  
+  inp_params <- list("Model_XDataFile" = "Data/SmallTestFile.csv",
+                     "XData_To_Use" = c("Returns", "PC1", "PC2"),
+                     "Fit_Window" = 250,
+                     "Rolling_Window_Performance" = 10,
+                     "Prediction_Adjust_Factor" = 0.5,
+                     "AdjustPredictedPositions" = TRUE,
+                     "Classifier_Type" = "lda",
+                     "Refit_Classifier_Periodicity" = NA)
   
   outp_results <- list()  # List of backtest results and various calculated objects
   
@@ -33,7 +41,7 @@ Backtest_ClassifierAlgo <- function(inp_params) {
   # ---
   Logger("Performing backtest...")
   
-  # Define all arrays of output information that we will generate during backtest
+  # Initialise some data.frames to store data throughout iterations 
   tmp_predictions_raw <- data.frame(matrix(NA, nrow(model_xdata), length(config$Crosses), dimnames=list(gsub("-", "-", as.Date(model_xdata$DateTime_DataType, "%d/%m/%Y")), config$Crosses)))
   tmp_predictions_adj <- data.frame(matrix(NA, nrow(model_xdata), length(config$Crosses), dimnames=list(gsub("-", "-", as.Date(model_xdata$DateTime_DataType, "%d/%m/%Y")), config$Crosses)))
   tmp_predictions_accuracy <- data.frame(matrix(NA, nrow(model_xdata), length(config$Crosses), dimnames=list(gsub("-", "-", as.Date(model_xdata$DateTime_DataType, "%d/%m/%Y")), config$Crosses)))
@@ -41,18 +49,42 @@ Backtest_ClassifierAlgo <- function(inp_params) {
   tmp_currency_targets <- data.frame(matrix(NA, nrow(model_xdata), length(config$Currencies), dimnames=list(gsub("-", "-", as.Date(model_xdata$DateTime_DataType, "%d/%m/%Y")), config$Currencies)))
   tmp_currency_returns <- data.frame(matrix(NA, nrow(model_xdata), length(config$Currencies), dimnames=list(gsub("-", "-", as.Date(model_xdata$DateTime_DataType, "%d/%m/%Y")), config$Currencies)))
   
-  
   # Extract concise array of cross returns for ease of use in backtester
   cross_returns_array <- model_xdata[, c(1, match(paste(config$Crosses, ".1_Return", sep=""), names(model_xdata)))]  # Array of cross returns
   colnames(cross_returns_array) <- c("Datetime", config$Crosses)  # Put better headers (excluding the .1_Return bit)
   
   # Begin iterations through model_xdata (beyond initial classifier training data range), generating targets
+  time_since_fit <- 0
   for (i in (inp_params$Fit_Window + 1):nrow(model_xdata)) {
     
+    # Progress print at set intervals
+    # ---
     if (i %% 50 == 0)
       Logger(paste("On date ", i, " of ", nrow(model_xdata), " ... ", sep=""))
+    # ---
     
-    # Get cross prediction/classifications for next day returns using current day xdata
+    # Section here to do something special like re-fit a model if certain criteria met
+    # ---
+    if (!is.na(inp_params$Refit_Classifier_Periodicity)) {  # Refit the classifier models here
+      # This should all live in a separate method, just to be called now
+      if (time_since_fit == 0) {
+        Logger("Fitting classifier models...")
+        classifiers_per_cross <- list()
+        for (k in seq_along(config$Crosses)) {
+          cat("Currently on cross:", config$Crosses[k], "\n")
+          inp_params$Cross <- config$Crosses[k]
+          tmp_training_data <- model_xdata[(i - inp_params$Fit_Window):(i - 1), ]
+          tmp_data <- Get_SubsetData_ForClassification(inp_data = tmp_training_data, inp_params = inp_params)
+          classifiers_per_cross[[config$Crosses[k]]] <- Fit_Classifier(inp_data = tmp_data, inp_params = inp_params)
+        }
+        outp_results$Cross_Classifiers <- classifiers_per_cross
+        time_since_fit <- 0
+      }
+    }
+    # ---
+    
+    # Use xdata to classify the next day return
+    # ---
     for (j in seq_along(config$Crosses)) {
       tmp_cross <- config$Crosses[j]
       
@@ -79,8 +111,10 @@ Backtest_ClassifierAlgo <- function(inp_params) {
       }
       
     }
+    # ---
     
-    # Aggregate all predictions to get currency level targets
+    # Aggregate predictions to get currency level targets
+    # ---
     for (j in seq_along(config$Currencies)) {
       tmp_ccy <- config$Currencies[j]  # This currency
       tmp_cols_as_base <- grep(tmp_ccy, substr(config$Crosses, 1, 3))  # Columns where this currency is base currency of cross
@@ -89,8 +123,10 @@ Backtest_ClassifierAlgo <- function(inp_params) {
       tmp_pos_as_quote <- sum(tmp_predictions_adj[i, tmp_cols_as_quote])  # Sum of predictions where currency is quote
       tmp_currency_targets[i, j] <- tmp_pos_as_base - tmp_pos_as_quote  # Total aggregated currency holding ("as quote" sum contributes as negative)
     }
+    # ---
     
     # Get resulting return from the target currency holdings
+    # ---
     if (i < nrow(model_xdata)) {
       for (j in seq_along(config$Currencies)) {
         
@@ -105,14 +141,19 @@ Backtest_ClassifierAlgo <- function(inp_params) {
         
       }
     }
+    # ---
+    
+    time_since_fit <- time_since_fit + 1
     
   }
+  Logger("Done!", inp_new_line = FALSE)
+  
+  # Add some of the data arrays to the return list for user
   outp_results$Cross_Predictions <- tmp_predictions_adj
   outp_results$Cross_Predictions_Accuracy <- tmp_predictions_accuracy
   outp_results$Cross_Predictions_Accuracy_Rolling <- tmp_predictions_accuracy_rolling
   outp_results$Currency_Targets <- tmp_currency_targets
   outp_results$Currency_Returns <- tmp_currency_returns
-  Logger("Done!", inp_new_line = FALSE)
   
   return (outp_results)
   
