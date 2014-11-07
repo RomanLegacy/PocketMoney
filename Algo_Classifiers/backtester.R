@@ -1,16 +1,20 @@
 #backtester.r
 
 Backtest_ClassifierAlgo <- function(inp_params) {
-  # Perform a backtest of a specified classifier type using specified backtest parameters
+  # Perform a backtest of a specified classifier type using specified backtest parameters.
+  # Parameter list must contain the following objects:
+  # Model_XDataFile, XData_To_Use, Fit_Window, Rolling_Window_Performance, Prediction_Adjust_Factor, AdjustPredictedPositions
+  # Classifier_Type, Refit_Classifier_Periodicity
   
-  inp_params <- list("Model_XDataFile" = "Data/SmallTestFile.csv",
-                     "XData_To_Use" = c("Returns", "PC1", "PC2"),
-                     "Fit_Window" = 250,
-                     "Rolling_Window_Performance" = 10,
-                     "Prediction_Adjust_Factor" = 0.5,
-                     "AdjustPredictedPositions" = TRUE,
-                     "Classifier_Type" = "lda",
-                     "Refit_Classifier_Periodicity" = NA)
+#   inp_params <- my_params
+#   inp_params <- list("Model_XDataFile" = "Data/SmallTestFile.csv",
+#                      "XData_To_Use" = c("Returns", "PC1", "PC2"),
+#                      "Fit_Window" = 250,
+#                      "Rolling_Window_Performance" = 10,
+#                      "Prediction_Adjust_Factor" = 0.5,
+#                      "AdjustPredictedPositions" = TRUE,
+#                      "Classifier_Type" = "lda",
+#                      "Refit_Classifier_Periodicity" = NA)
   
   outp_results <- list()  # List of backtest results and various calculated objects
   
@@ -67,8 +71,8 @@ Backtest_ClassifierAlgo <- function(inp_params) {
     # ---
     if (!is.na(inp_params$Refit_Classifier_Periodicity)) {  # Refit the classifier models here
       # This should all live in a separate method, just to be called now
-      if (time_since_fit == 0) {
-        Logger("Fitting classifier models...")
+      if (time_since_fit == inp_params$Refit_Classifier_Periodicity) {
+        Logger("Re-fitting classifier models...")
         classifiers_per_cross <- list()
         for (k in seq_along(config$Crosses)) {
           cat("Currently on cross:", config$Crosses[k], "\n")
@@ -101,11 +105,11 @@ Backtest_ClassifierAlgo <- function(inp_params) {
       
       # Record whether this was a correct prediction using next day cross return (if not already last row)
       if (i < nrow(model_xdata))
-        outp_predictions_accuracy[i, j] <- as.numeric(sign(tmp_predictions_raw[i, j]) == sign(cross_returns_array[[tmp_cross]][i + 1]))
+        tmp_predictions_accuracy[i, j] <- as.numeric(sign(tmp_predictions_raw[i, j]) == sign(cross_returns_array[[tmp_cross]][i + 1]))
       
       # Calculate the rolling window prediction accuracy ratio (if sufficient predictions made) and create a performance-adjusted prediction 
       if (i > (inp_params$Fit_Window + inp_params$Rolling_Window_Performance)) {
-        tmp <- outp_predictions_accuracy[(i - inp_params$Rolling_Window_Performance):(i - 1), j]  # Window of prediction accuracies for this cross
+        tmp <- tmp_predictions_accuracy[(i - inp_params$Rolling_Window_Performance):(i - 1), j]  # Window of prediction accuracies for this cross
         tmp_predictions_accuracy[i, j] <- sum(tmp == 1) / inp_params$Rolling_Window_Performance  # Accuracy ratio      
         tmp_predictions_adj[i, j] <- tmp_predictions_raw[i, j] * (1 + inp_params$Prediction_Adjust_Factor * (tmp_predictions_accuracy[i, j] - 0.5) / 0.5)
       }
@@ -116,11 +120,18 @@ Backtest_ClassifierAlgo <- function(inp_params) {
     # Aggregate predictions to get currency level targets
     # ---
     for (j in seq_along(config$Currencies)) {
+      
       tmp_ccy <- config$Currencies[j]  # This currency
-      tmp_cols_as_base <- grep(tmp_ccy, substr(config$Crosses, 1, 3))  # Columns where this currency is base currency of cross
-      tmp_cols_as_quote <- grep(tmp_ccy, substr(config$Crosses, 4, 6))  # Columns where this currency is quote currency of cross
-      tmp_pos_as_base <- sum(tmp_predictions_adj[i, tmp_cols_as_base])  # Sum of predictions where currency is base
-      tmp_pos_as_quote <- sum(tmp_predictions_adj[i, tmp_cols_as_quote])  # Sum of predictions where currency is quote
+      
+      tmp_cxs_as_base <- config$Crosses[grep(tmp_ccy, substr(config$Crosses, 1, 3))]  # Crosses with the target ccy as base
+      tmp_cxs_as_quote <- config$Crosses[grep(tmp_ccy, substr(config$Crosses, 4, 6))]  # Crosses with the target ccy as quote
+      
+      tmp_pos_as_base <- tmp_pos_as_quote <- 0  # Default values at 0
+      if (!all(is.na(tmp_predictions_adj[tmp_cxs_as_base][i, ])))
+        tmp_pos_as_base <- sum(tmp_predictions_adj[tmp_cxs_as_base][i, ], na.rm=TRUE)  # Sum of predictions where currency is base
+      if (!all(is.na(tmp_predictions_adj[tmp_cxs_as_quote][i, ])))
+        tmp_pos_as_quote <- sum(tmp_predictions_adj[tmp_cxs_as_quote][i, ], na.rm=TRUE)  # Sum of predictions where currency is quote
+      
       tmp_currency_targets[i, j] <- tmp_pos_as_base - tmp_pos_as_quote  # Total aggregated currency holding ("as quote" sum contributes as negative)
     }
     # ---
@@ -215,7 +226,7 @@ Backtest_ClassifierAlgo_WithRefits <- function(inp_params) {
     # Perform a re-fitting of the classifiers per cross if time_to_refit has reached 0
     # ---
     if (time_to_refit == 0) {
-      Logger("Fitting classifier models...")
+      Logger("Re-fitting classifier models...")
       classifiers_per_cross <- list()
       for (k in seq_along(config$Crosses)) {
         cat("Currently on cross:", config$Crosses[k], "\n")

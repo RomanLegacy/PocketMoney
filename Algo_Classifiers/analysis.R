@@ -49,8 +49,9 @@ my_params <- list("Model_XDataFile" = "Data/SmallTestFile.csv",
                   "Rolling_Window_Performance" = 10,
                   "Prediction_Adjust_Factor" = 0.5,
                   "AdjustPredictedPositions" = TRUE,
-                  "Classifier_Type" = "lda")
-backtest_results <- Backtest_ClassifierAlgo(my_params)
+                  "Classifier_Type" = "lda",
+                  "Refit_Classifier_Periodicity" = 50)
+backtest_results2 <- Backtest_ClassifierAlgo(my_params)
 
 # Plot the cumulative returns for each of the currencies and the aggregate portfolio
 backtest_results$CurrencyTarget_Returns[is.na(backtest_results$CurrencyTarget_Returns)] <- 0

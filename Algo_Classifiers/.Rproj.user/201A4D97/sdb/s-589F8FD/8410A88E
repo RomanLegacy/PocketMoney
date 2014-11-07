@@ -1,0 +1,17 @@
+{
+    "contents" : "#config.r\n\nsource('backtester.R')\nsource('methods.R')\n\n\nrequire(MASS)\nrequire(nnet)\nrequire(class)\nrequire(lubridate)\n\nconfig <- list(\"Crosses\" = c(\"EURGBP\", \"EURAUD\", \"EURNZD\", \"EURUSD\", \"EURCAD\", \"EURCHF\", \"EURNOK\", \"EURSEK\", \"EURJPY\",\n                             \"GBPAUD\", \"GBPNZD\", \"GBPUSD\", \"GBPCAD\", \"GBPCHF\", \"GBPNOK\", \"GBPSEK\", \"GBPJPY\",\n                             \"AUDNZD\", \"AUDUSD\", \"AUDCAD\", \"AUDCHF\", \"AUDNOK\", \"AUDSEK\", \"AUDJPY\",\n                             \"NZDUSD\", \"NZDCAD\", \"NZDCHF\", \"NZDNOK\", \"NZDSEK\", \"NZDJPY\",\n                             \"USDCAD\", \"USDCHF\", \"USDNOK\", \"USDSEK\", \"USDJPY\",\n                             \"CADCHF\", \"CADNOK\", \"CADSEK\", \"CADJPY\",\n                             \"CHFNOK\", \"CHFSEK\", \"CHFJPY\",\n                             \"NOKSEK\", \"NOKJPY\",\n                             \"SEKJPY\"),\n               \"Currencies\" = c(\"EUR\", \"GBP\", \"AUD\", \"NZD\", \"USD\", \"CAD\", \"CHF\", \"NOK\", \"SEK\", \"JPY\"),\n               \"Currencies_To_USD\" = list(\"EUR\"=\"EURUSD\", \"GBP\"=\"GBPUSD\", \"AUD\"=\"AUDUSD\",\n                                          \"NZD\"=\"NZDUSD\", \"CAD\"=\"USDCAD\", \"CHF\"=\"USDCHF\",\n                                          \"NOK\"=\"USDNOK\", \"SEK\"=\"USDNOK\", \"JPY\"=\"USDJPY\"),\n               \"Market_Indices\" = list(\"EUR\"=\"DAX\", \"GBP\"=\"UKX\", \"AUD\"=\"AS30\", \"NZD\"=\"NZSE\",\n                                       \"USD\"=\"SPXES1\", \"CAD\"=\"PT1\", \"CHF\"=\"SMI\",\n                                       \"NOK\"=\"OBX\", \"SEK\"=\"OMX\", \"JPY\"=\"NKY\"),\n               \"Market_Exos\" = list(\"Copper\"=\"HG1\", \"Crude\"=\"CL1\", \"Gold\"=\"XAUUSD\")\n)",
+    "created" : 1415201345332.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "294477546",
+    "id" : "8410A88E",
+    "lastKnownWriteTime" : 1415286728,
+    "path" : "~/GitHub/PocketMoney/Algo_Classifiers/config.R",
+    "project_path" : "config.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}
