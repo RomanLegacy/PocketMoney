@@ -35,6 +35,10 @@ Get_XData <- function(inp_filename) {
   tmpnames <- names(tmp_data)
   names(tmp_data) <- paste(tmpnames, tmp, sep="_")
   
+  # Convert the first column (to be called "Datetime") to a nicer format
+  names(tmp_data)[1] <- "Datetime"
+  tmp_data$Datetime <- gsub("-", "-", as.Date(tmp_data$Datetime, "%d/%m/%Y"))
+  
   Logger("Complete!", inp_new_line = FALSE)
   
   return (tmp_data)
