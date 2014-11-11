@@ -3,11 +3,22 @@
 source('backtester.R')
 source('methods.R')
 
-
 require(MASS)
 require(nnet)
 require(class)
 require(lubridate)
+
+# Temporary test parameters, to be used to test backtester still runs through and is not broken
+my_tmp_test_params <- list("Backtest_Tag" = "NoAdj,WithRefit50",
+                  "Model_XDataFile" = "Data/SmallTestFile.csv",
+                  "XData_To_Use" = c("Returns", "PC1", "PC2"),
+                  "Fit_Window" = 250,
+                  "Show_Backtest_Progress" = TRUE,
+                  "Rolling_Window_Performance" = 10,
+                  "Prediction_Adjust_Factor" = 0.5,
+                  "AdjustPredictedPositions" = FALSE,
+                  "Classifier_Type" = "lda",
+                  "Refit_Classifier_Periodicity" = 50)
 
 config <- list("Crosses" = c("EURGBP", "EURAUD", "EURNZD", "EURUSD", "EURCAD", "EURCHF", "EURNOK", "EURSEK", "EURJPY",
                              "GBPAUD", "GBPNZD", "GBPUSD", "GBPCAD", "GBPCHF", "GBPNOK", "GBPSEK", "GBPJPY",

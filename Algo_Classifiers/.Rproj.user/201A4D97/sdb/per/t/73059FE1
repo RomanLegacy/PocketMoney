@@ -1,0 +1,17 @@
+{
+    "contents" : "tmp <- lapply(classifiers_per_cross, function(d){\n  coef(d[[1]])\n})\n\n\n\n",
+    "created" : 1415718018937.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1854137540",
+    "id" : "73059FE1",
+    "lastKnownWriteTime" : 1415718177,
+    "path" : "~/GitHub/PocketMoney/Algo_Classifiers/doodlepad.R",
+    "project_path" : "doodlepad.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}
