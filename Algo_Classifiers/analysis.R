@@ -9,25 +9,25 @@ tail(tmp_res$, 20)
 
 # Run backtest twice (with different parameters) and compare the performance of each
 # ---
-my_params <- list("Backtest_Tag" = "NoAdj,NoRefit",
+my_params <- list("Backtest_Tag" = "WithAdj0.5,NoRefit",
                   "Model_XDataFile" = "Data/SmallTestFile.csv",
                   "XData_To_Use" = c("Returns", "PC1", "PC2"),
                   "Fit_Window" = 250,
                   "Show_Backtest_Progress" = TRUE,
                   "Rolling_Window_Performance" = 10,
                   "Prediction_Adjust_Factor" = 0.5,
-                  "AdjustPredictedPositions" = FALSE,
+                  "AdjustPredictedPositions" = TRUE,
                   "Classifier_Type" = "lda",
                   "Refit_Classifier_Periodicity" = NA)
 backtest_results <- Backtest_ClassifierAlgo(my_params)
 
-my_params <- list("Backtest_Tag" = "WithAdj,WithRefit50",
+my_params <- list("Backtest_Tag" = "WithAdj0.8,NoRefit",
                   "Model_XDataFile" = "Data/SmallTestFile.csv",
                   "XData_To_Use" = c("Returns", "PC1", "PC2"),
                   "Fit_Window" = 250,
                   "Show_Backtest_Progress" = TRUE,
                   "Rolling_Window_Performance" = 10,
-                  "Prediction_Adjust_Factor" = 0.5,
+                  "Prediction_Adjust_Factor" = 0.8,
                   "AdjustPredictedPositions" = TRUE,
                   "Classifier_Type" = "lda",
                   "Refit_Classifier_Periodicity" = NA)
@@ -38,7 +38,7 @@ tmp_ccys <- config$Currencies
 for (i in seq_along(tmp_ccys)) {
   tmp_ccy <- tmp_ccys[i]
   tmp <- backtest_results$Currency_Returns[[tmp_ccy]]; tmp[is.na(tmp)] <- 0
-  tmp2 <- backtest_results2$Currency_Returns[[tmp_ccy]]; tmp2[is.na(tmp2)] <- 0;
+  tmp2 <- backtest_results2$Currency_Returns[[tmp_ccy]]; tmp2[is.na(tmp2)] <- 0
   plot(cumsum(tmp), ylim=range(c(cumsum(tmp), cumsum(tmp2))), type="l", main=paste(backtest_results$Backtest_Parameters$Backtest_Tag, backtest_results2$Backtest_Parameters$Backtest_Tag, tmp_ccy, sep=" : "))
   lines(cumsum(tmp2), col="red", lty=2)
   legend("topleft", legend=c(backtest_results$Backtest_Parameters$Backtest_Tag, backtest_results2$Backtest_Parameters$Backtest_Tag), col=1:2, lty=1:2)

@@ -1,12 +1,12 @@
 {
-    "contents" : "tmp <- lapply(classifiers_per_cross, function(d){\n  coef(d[[1]])\n})\n\n\n\n",
+    "contents" : "tmp <- lapply(classifiers_per_cross, function(d){\n  coef(d[[1]])\n})\n\nwrite.table(tmp_predictions_raw, \"Results/AUDIT_Cross_Predictions_Raw.csv\", sep=\",\", quote=FALSE, row.names = TRUE)\nwrite.table(outp_results$Cross_Predictions, \"Results/AUDIT_Cross_Predictions_Adj.csv\", sep=\",\", quote=FALSE, row.names = TRUE)\nwrite.table(outp_results$Cross_Predictions_Accuracy, \"Results/AUDIT_Cross_Predictions_Accuracy.csv\", sep=\",\", quote=FALSE, row.names = TRUE)\nwrite.table(outp_results$Cross_Predictions_Accuracy_Rolling, \"Results/AUDIT_Cross_Predictions_Accuracy_Rolling.csv\", sep=\",\", quote=FALSE, row.names = TRUE)\nwrite.table(outp_results$Currency_Targets, \"Results/AUDIT_Currency_Targets.csv\", sep=\",\", quote=FALSE, row.names = TRUE)\nwrite.table(outp_results$Currency_Returns, \"Results/AUDIT_Currency_Returns.csv\", sep=\",\", quote=FALSE, row.names = TRUE)\nwrite.table(outp_results$XData, \"Results/AUDIT_XData.csv\", sep=\",\", quote=FALSE, row.names = TRUE)\n\n\ndim(backtest_results2$Cross_Predictions)\nrownames(backtest_results2$Cross_Predictions)\n",
     "created" : 1415718018937.000,
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "1854137540",
+    "hash" : "3923759961",
     "id" : "73059FE1",
-    "lastKnownWriteTime" : 1415718177,
+    "lastKnownWriteTime" : 1415802844,
     "path" : "~/GitHub/PocketMoney/Algo_Classifiers/doodlepad.R",
     "project_path" : "doodlepad.R",
     "properties" : {

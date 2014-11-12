@@ -132,7 +132,7 @@ Backtest_ClassifierAlgo <- function(inp_params) {
         
         # If using adjusted predictions, now use these rolling stats to help adjust prediction value
         if (inp_params$AdjustPredictedPositions) {
-          tmp_predictions_adj[i, j] <- tmp_predictions_raw[i, j] * (1 + inp_params$Prediction_Adjust_Factor * (tmp_predictions_accuracy[i, j] - 0.5) / 0.5)
+          tmp_predictions_adj[i, j] <- tmp_predictions_raw[i, j] * (1 + inp_params$Prediction_Adjust_Factor * (tmp_predictions_accuracy_rolling[i, j] - 0.5) / 0.5)
         }
         
       }

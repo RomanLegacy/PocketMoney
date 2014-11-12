@@ -192,3 +192,20 @@ Get_ClassifierPrediction <- function(inp_classifier, inp_data, inp_params) {
   return (tmp_prediciton)
   
 }
+
+Calculate_AlgoPerformanceStats <- function(inp_backtest) {
+  
+  # Generates performance stats list for an backtested algorithm output
+  #
+  # Calls: NA
+  #
+  # Inputs:
+  #     inp_backtest:  backtest object: object returned by a backtest
+  #
+  # Returns: a list of stats summarising this backtest performance
+  
+  # TO DO
+  
+  return (NULL)
+  
+}

@@ -32,7 +32,7 @@ config <- list("Crosses" = c("EURGBP", "EURAUD", "EURNZD", "EURUSD", "EURCAD", "
                "Currencies" = c("EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "NOK", "SEK", "JPY"),
                "Currencies_To_USD" = list("EUR"="EURUSD", "GBP"="GBPUSD", "AUD"="AUDUSD",
                                           "NZD"="NZDUSD", "CAD"="USDCAD", "CHF"="USDCHF",
-                                          "NOK"="USDNOK", "SEK"="USDNOK", "JPY"="USDJPY"),
+                                          "NOK"="USDNOK", "SEK"="USDSEK", "JPY"="USDJPY"),
                "Market_Indices" = list("EUR"="DAX", "GBP"="UKX", "AUD"="AS30", "NZD"="NZSE",
                                        "USD"="SPXES1", "CAD"="PT1", "CHF"="SMI",
                                        "NOK"="OBX", "SEK"="OMX", "JPY"="NKY"),
