@@ -1,20 +1,24 @@
 #backtester.r
 
 Backtest_ClassifierAlgo <- function(inp_params) {
-  # Perform a backtest of a specified classifier type using specified backtest parameters.
-  # Parameter list must contain the following objects:
-  # Model_XDataFile, XData_To_Use, Fit_Window, Rolling_Window_Performance, Prediction_Adjust_Factor, AdjustPredictedPositions
-  # Classifier_Type, Refit_Classifier_Periodicity
   
-#   inp_params <- my_tmp_test_params
-#   inp_params <- list("Model_XDataFile" = "Data/SmallTestFile.csv",
-#                      "XData_To_Use" = c("Returns", "PC1", "PC2"),
-#                      "Fit_Window" = 250,
-#                      "Rolling_Window_Performance" = 10,
-#                      "Prediction_Adjust_Factor" = 0.5,
-#                      "AdjustPredictedPositions" = TRUE,
-#                      "Classifier_Type" = "lda",
-#                      "Refit_Classifier_Periodicity" = NA)
+  # Perform a backtest of a specified classifier type using specified backtest parameters.
+  #
+  # Calls: Get_XData, Extract_CrossTrainingXData, Fit_Classifier, Extract_CrossPredictionXData
+  #        Get_ClassifierPrediction
+  #
+  # Inputs:
+  #     inp_params: list: backtest parameters. Note: the list contains the following items:
+  #                 Model_XDataFile, XData_To_Use, Fit_Window, Rolling_Window_Performance
+  #                 Prediction_Adjust_Factor, AdjustPredictedPositions,
+  #                 Classifier_Type, Refit_Classifier_Periodicity, Start_AUM, Reinvest_Daily
+  #
+  # Returns: backtest results object (a list) containing the following items:
+  #             Backtest_Parameters, XData, Cross_Classifiers, Cross_Predictions
+  #             Cross_Predictions_Accuracy, Cross_Predictions_Accuracy_Rolling
+  #             Currency_Targets, Currency_Pnls, Currency_Returns, Currency_Turnovers
+  
+  #inp_params <- my_tmp_test_params
   
   outp_results <- list()  # List of backtest results and various calculated objects
   classifiers_per_cross <- list()  # List object to hold trained classifiers for each cross, at each time (if using re-fitting)
@@ -52,7 +56,9 @@ Backtest_ClassifierAlgo <- function(inp_params) {
   tmp_predictions_accuracy <- data.frame(matrix(NA, nrow(model_xdata), length(config$Crosses), dimnames=list(model_xdata$Datetime, config$Crosses)))
   tmp_predictions_accuracy_rolling <- data.frame(matrix(NA, nrow(model_xdata), length(config$Crosses), dimnames=list(model_xdata$Datetime, config$Crosses)))
   tmp_currency_targets <- data.frame(matrix(NA, nrow(model_xdata), length(config$Currencies), dimnames=list(model_xdata$Datetime, config$Currencies)))
-  tmp_currency_returns <- data.frame(matrix(NA, nrow(model_xdata), length(config$Currencies), dimnames=list(model_xdata$Datetime, config$Currencies)))
+  tmp_currency_pnls <- data.frame(matrix(NA, nrow(model_xdata), length(config$Currencies) + 1, dimnames=list(model_xdata$Datetime, c(config$Currencies, "Aggregate"))))
+  tmp_currency_returns <- data.frame(matrix(NA, nrow(model_xdata), length(config$Currencies) + 1, dimnames=list(model_xdata$Datetime, c(config$Currencies, "Aggregate"))))
+  tmp_daily_start_aum <- rep(inp_params$Start_AUM, nrow(model_xdata))
   
   # Extract concise array of cross returns for ease of use in backtester
   cross_returns_array <- model_xdata[, c(1, match(paste(config$Crosses, ".1_Return", sep=""), names(model_xdata)))]  # Array of cross returns
@@ -85,18 +91,18 @@ Backtest_ClassifierAlgo <- function(inp_params) {
     }
     # ---
     
-#     # Alternatively, the above re-training procedure can be based on some cross-specific performance stats, and some classifiers can be re-trained independently of others
-#     # ---
-#     tmp_fit_date <- model_xdata$Datetime[i]
-#     for (i_cross in config$Crosses) {
-#       if (TRUE) {  # Some criteria for re-training the classifier
-#         Logger(paste("Re-training classifier:", i_cross, sep=" "))
-#         inp_params$Cross <- i_cross
-#         tmp_training_data <- Extract_CrossTrainingXData(model_xdata, inp_params, i)
-#         classifiers_per_cross[[i_cross]][[tmp_fit_date]] <- Fit_Classifier(tmp_training_data, inp_params)
-#       }
-#     }
-#     # ---
+    ## Alternatively, the above re-training procedure can be based on some cross-specific performance stats, and some classifiers can be re-trained independently of others
+    ## ---
+    #tmp_fit_date <- model_xdata$Datetime[i]
+    #for (i_cross in config$Crosses) {
+    #  if (TRUE) {  # Some criteria for re-training the classifier
+    #    Logger(paste("Re-training classifier:", i_cross, sep=" "))
+    #    inp_params$Cross <- i_cross
+    #    tmp_training_data <- Extract_CrossTrainingXData(model_xdata, inp_params, i)
+    #    classifiers_per_cross[[i_cross]][[tmp_fit_date]] <- Fit_Classifier(tmp_training_data, inp_params)
+    #  }
+    #}
+    ## ---
 
     # Classify next day returns
     # ---
@@ -155,31 +161,49 @@ Backtest_ClassifierAlgo <- function(inp_params) {
       
       tmp_currency_targets[i, j] <- tmp_pos_as_base - tmp_pos_as_quote  # Total aggregated currency holding ("as quote" sum contributes as negative)
     }
+    
+    # Now convert currency targets row to USD values based on starting daily aum
+    tmp_currency_targets[i, ] <- tmp_daily_start_aum[i] * (tmp_currency_targets[i, ] / sum(abs(tmp_currency_targets[i, ])))
     # ---
     
-    # Get resulting return from the target currency holdings
+    # Get resulting pnls and returns from the target currency holdings
     # ---
     if (i < nrow(model_xdata)) {
       for (j in seq_along(config$Currencies)) {
         
         tmp_ccy <- config$Currencies[j]
         if (tmp_ccy == "USD") {
+          tmp_currency_pnls[i, j] <- 0
           tmp_currency_returns[i, j] <- 0
         } else if (tmp_ccy %in% c("EUR", "GBP", "AUD", "NZD")) {
-          tmp_currency_returns[i, j] <- cross_returns_array[[config$Currencies_To_USD[[tmp_ccy]]]][i + 1] * tmp_currency_targets[i, j]
+          tmp_currency_pnls[i, j] <- cross_returns_array[[config$Currencies_To_USD[[tmp_ccy]]]][i + 1] * tmp_currency_targets[i, j]
+          tmp_currency_returns[i, j] <- tmp_currency_pnls[i, j] / abs(tmp_currency_targets[i, j])
         } else {
-          tmp_currency_returns[i, j] <- cross_returns_array[[config$Currencies_To_USD[[tmp_ccy]]]][i + 1] * tmp_currency_targets[i, j] * -1
+          tmp_currency_pnls[i, j] <- cross_returns_array[[config$Currencies_To_USD[[tmp_ccy]]]][i + 1] * tmp_currency_targets[i, j] * -1
+          tmp_currency_returns[i, j] <- tmp_currency_pnls[i, j] / abs(tmp_currency_targets[i, j])
         }
         
       }
+      
+      # Add an aggregate pnl and return column to end of each array
+      tmp_currency_pnls[i, j + 1] <- sum(tmp_currency_pnls[i, ], na.rm=TRUE)
+      tmp_currency_returns[i, j + 1] <- tmp_currency_pnls[i, j + 1] / tmp_daily_start_aum[i]
     }
     # ---
     
+    # Update the daily starting aum vector
+    if (inp_params$Reinvest_Daily) {  # Using daily reinvestment... add current day pnl to last aum number
+      tmp_daily_start_aum[i + 1] <- tmp_daily_start_aum[i] + tmp_currency_pnls[i, j + 1]
+    }
+      
     time_since_fit <- time_since_fit + 1
     
   }
   Logger("Done!", inp_new_line = FALSE)
   
+  # Create a dataframe of target position turnover data on the currency level
+  tmp_currency_turnovers <- tmp_currency_targets[-1, ] - tmp_currency_targets[-nrow(tmp_currency_targets), ]
+
   # Add the fitted classifiers object to return list for user information
   outp_results$Cross_Classifiers <- classifiers_per_cross
   
@@ -188,7 +212,10 @@ Backtest_ClassifierAlgo <- function(inp_params) {
   outp_results$Cross_Predictions_Accuracy <- tmp_predictions_accuracy
   outp_results$Cross_Predictions_Accuracy_Rolling <- tmp_predictions_accuracy_rolling
   outp_results$Currency_Targets <- tmp_currency_targets
+  outp_results$Currency_Pnls <- tmp_currency_pnls
   outp_results$Currency_Returns <- tmp_currency_returns
+  outp_results$Currency_Turnovers <- tmp_currency_turnovers
+  outp_results$Daily_Opening_AUMs <- tmp_daily_start_aum
   
   return (outp_results)
   

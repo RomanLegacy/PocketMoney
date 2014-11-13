@@ -18,7 +18,9 @@ my_tmp_test_params <- list("Backtest_Tag" = "NoAdj,WithRefit50",
                   "Prediction_Adjust_Factor" = 0.5,
                   "AdjustPredictedPositions" = FALSE,
                   "Classifier_Type" = "lda",
-                  "Refit_Classifier_Periodicity" = 50)
+                  "Refit_Classifier_Periodicity" = 50,
+                  "Start_AUM" = 1e6,
+                  "Reinvest_Daily" = FALSE)
 
 config <- list("Crosses" = c("EURGBP", "EURAUD", "EURNZD", "EURUSD", "EURCAD", "EURCHF", "EURNOK", "EURSEK", "EURJPY",
                              "GBPAUD", "GBPNZD", "GBPUSD", "GBPCAD", "GBPCHF", "GBPNOK", "GBPSEK", "GBPJPY",

@@ -9,8 +9,8 @@ tail(tmp_res$, 20)
 
 # Run backtest twice (with different parameters) and compare the performance of each
 # ---
-my_params <- list("Backtest_Tag" = "WithAdj0.5,NoRefit",
-                  "Model_XDataFile" = "Data/SmallTestFile.csv",
+my_params <- list("Backtest_Tag" = "NoDailyReinvest",
+                  "Model_XDataFile" = "Data/RegXData_London.csv",  # RegXData_London.csv
                   "XData_To_Use" = c("Returns", "PC1", "PC2"),
                   "Fit_Window" = 250,
                   "Show_Backtest_Progress" = TRUE,
@@ -18,21 +18,29 @@ my_params <- list("Backtest_Tag" = "WithAdj0.5,NoRefit",
                   "Prediction_Adjust_Factor" = 0.5,
                   "AdjustPredictedPositions" = TRUE,
                   "Classifier_Type" = "lda",
-                  "Refit_Classifier_Periodicity" = NA)
+                  "Refit_Classifier_Periodicity" = NA,
+                  "Start_AUM" = 1e6,
+                  "Reinvest_Daily" = FALSE)
 backtest_results <- Backtest_ClassifierAlgo(my_params)
 
-my_params <- list("Backtest_Tag" = "WithAdj0.8,NoRefit",
-                  "Model_XDataFile" = "Data/SmallTestFile.csv",
+my_params <- list("Backtest_Tag" = "WithDailyReinvest",
+                  "Model_XDataFile" = "Data/RegXData_London.csv",  # SmallTestFile.csv
                   "XData_To_Use" = c("Returns", "PC1", "PC2"),
                   "Fit_Window" = 250,
                   "Show_Backtest_Progress" = TRUE,
                   "Rolling_Window_Performance" = 10,
-                  "Prediction_Adjust_Factor" = 0.8,
+                  "Prediction_Adjust_Factor" = 0.5,
                   "AdjustPredictedPositions" = TRUE,
                   "Classifier_Type" = "lda",
-                  "Refit_Classifier_Periodicity" = NA)
+                  "Refit_Classifier_Periodicity" = NA,
+                  "Start_AUM" = 1e6,
+                  "Reinvest_Daily" = TRUE)
 backtest_results2 <- Backtest_ClassifierAlgo(my_params)
 
+# Tmp plots
+tmp <- backtest_results$Currency_Pnls$Aggregate; tmp[is.na(tmp)] <- 0
+tmp2 <- backtest_results2$Currency_Pnls$Aggregate; tmp2[is.na(tmp2)] <- 0
+plot(cumsum(tmp), type="l"); lines(cumsum(tmp2), col="red")
 
 tmp_ccys <- config$Currencies
 for (i in seq_along(tmp_ccys)) {
