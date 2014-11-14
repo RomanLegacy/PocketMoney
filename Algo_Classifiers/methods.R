@@ -204,8 +204,79 @@ Calculate_AlgoPerformanceStats <- function(inp_backtest) {
   #
   # Returns: a list of stats summarising this backtest performance
   
-  # TO DO
+  # NOTE: would be nice to add cross performance summary here too so that we can maybe begin to drill in to the contributors to algo performance
   
-  return (NULL)
+  #inp_backtest <- backtest_results
+  
+  outp_stats <- list()
+  
+  # Get aggregate stats
+  # ---
+  tmp_pnls <- inp_backtest$Currency_Pnls$Aggregate
+  if (sum(is.na(tmp_pnls)) > 0) {  # Trim out any NA values
+    tmp_pnls <- tmp_pnls[-which(is.na(tmp_pnls))]
+  }
+  tmp_rtns <- inp_backtest$Currency_Returns$Aggregate
+  if (sum(is.na(tmp_rtns)) > 0) {  # Trim out any NA values
+    tmp_rtns <- tmp_rtns[-which(is.na(tmp_rtns))]
+  }
+  
+  tmp_equitycurve <- cumsum(tmp_pnls) + inp_backtest$Backtest_Parameters$Start_AUM
+  tmp_hwm <- cummax(tmp_equitycurve)
+  
+  tmp_stats <- list()
+  tmp_stats$Accuracy <- sum(tmp_rtns > 0) / length(tmp_rtns)  # Accuracy ratio
+  tmp_stats$Impact <- mean(tmp_rtns[tmp_rtns > 0]) / -mean(tmp_rtns[tmp_rtns < 0])  # Impact ratio
+  tmp_stats$Performance <- tmp_stats$Accuracy * tmp_stats$Impact  # Performance ratio
+  tmp_stats$Equity_Curve <- tmp_equitycurve
+  tmp_stats$Drawdown_Series <- tmp_equitycurve / tmp_hwm - 1
+  tmp_stats$Percent_Days_Drawdown_Above_2PC <- sum(tmp_stats$Drawdown_Series < -0.02) / length(tmp_stats$Drawdown_Series)
+  tmp_stats$Percent_Days_Drawdown_Above_5PC <- sum(tmp_stats$Drawdown_Series < -0.05) / length(tmp_stats$Drawdown_Series)
+  tmp_stats$Percent_Days_Drawdown_Above_10PC <- sum(tmp_stats$Drawdown_Series < -0.1) / length(tmp_stats$Drawdown_Series)
+  tmp_stats$Max_Win <- max(tmp_rtns)
+  tmp_stats$Max_Loss <- min(tmp_rtns)
+  
+  outp_stats$Aggregate <- tmp_stats
+  # ---
+  
+  # Get currency stats
+  # ---
+  tmp_ccy_stats <- list()
+  for (tmp_ccy in config$Currencies) {
+    tmp_lst <- list()
+    tmp_rtns <- inp_backtest$Currency_Returns[[tmp_ccy]]
+    if (sum(is.na(tmp_rtns)) > 0) {  # Trim out any NA values
+      tmp_rtns <- tmp_rtns[-which(is.na(tmp_rtns))]
+    }
+    tmp_lst$Equity_Curve <- cumsum(tmp_rtns)
+    tmp_lst$Accuracy <- sum(tmp_rtns > 0) / sum(tmp_rtns != 0)  # Accuracy ratio
+    tmp_lst$Impact <- mean(tmp_rtns[tmp_rtns > 0]) / -mean(tmp_rtns[tmp_rtns < 0])  # Impact ratio
+    tmp_lst$Performance <- tmp_lst$Accuracy * tmp_lst$Impact  # Performance ratio
+    tmp_lst$Total_Performance <- tail(tmp_lst$Equity_Curve, 1)
+    tmp_ccy_stats[[tmp_ccy]] <- tmp_lst
+  }
+  outp_stats$Currency <- tmp_ccy_stats
+  # ---
+  
+  # Get cross stats
+  # ---
+  tmp_cx_stats <- list()
+  for (tmp_cx in config$Crosses) {
+    tmp_lst <- list()
+    tmp_rtns <- inp_backtest$Cross_Returns[[tmp_cx]]
+    if (sum(is.na(tmp_rtns)) > 0) {  # Trim out any NA values
+      tmp_rtns <- tmp_rtns[-which(is.na(tmp_rtns))]
+    }
+    tmp_lst$Equity_Curve <- cumsum(tmp_rtns)
+    tmp_lst$Accuracy <- sum(tmp_rtns > 0) / sum(tmp_rtns != 0)  # Accuracy ratio
+    tmp_lst$Impact <- mean(tmp_rtns[tmp_rtns > 0]) / -mean(tmp_rtns[tmp_rtns < 0])  # Impact ratio
+    tmp_lst$Performance <- tmp_lst$Accuracy * tmp_lst$Impact  # Performance ratio
+    tmp_lst$Total_Performance <- tail(tmp_lst$Equity_Curve, 1)
+    tmp_cx_stats[[tmp_cx]] <- tmp_lst
+  }
+  outp_stats$Cross <- tmp_cx_stats
+  # ---
+  
+  return (outp_stats)
   
 }

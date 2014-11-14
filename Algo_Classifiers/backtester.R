@@ -204,6 +204,10 @@ Backtest_ClassifierAlgo <- function(inp_params) {
   # Create a dataframe of target position turnover data on the currency level
   tmp_currency_turnovers <- tmp_currency_targets[-1, ] - tmp_currency_targets[-nrow(tmp_currency_targets), ]
 
+  # Calculate the return performance series for the adjusted cross predictions to see, relatively, which are stronger/weaker performers 
+  tmp_cross_performance <- tmp_predictions_adj[-nrow(tmp_predictions_adj), ] * model_xdata[-1, match(paste(names(tmp_predictions_adj), ".1_Return", sep=""), names(model_xdata))]
+  tmp_cross_performance[is.na(tmp_cross_performance)] <- 0  # Set NA values to 0
+  
   # Add the fitted classifiers object to return list for user information
   outp_results$Cross_Classifiers <- classifiers_per_cross
   
@@ -216,6 +220,7 @@ Backtest_ClassifierAlgo <- function(inp_params) {
   outp_results$Currency_Returns <- tmp_currency_returns
   outp_results$Currency_Turnovers <- tmp_currency_turnovers
   outp_results$Daily_Opening_AUMs <- tmp_daily_start_aum
+  outp_results$Cross_Returns <- tmp_cross_performance
   
   return (outp_results)
   

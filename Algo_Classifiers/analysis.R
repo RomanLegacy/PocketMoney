@@ -10,7 +10,7 @@ tail(tmp_res$, 20)
 # Run backtest twice (with different parameters) and compare the performance of each
 # ---
 my_params <- list("Backtest_Tag" = "NoDailyReinvest",
-                  "Model_XDataFile" = "Data/RegXData_London.csv",  # RegXData_London.csv
+                  "Model_XDataFile" = "Data/SmallTestFile.csv",  # RegXData_London.csv
                   "XData_To_Use" = c("Returns", "PC1", "PC2"),
                   "Fit_Window" = 250,
                   "Show_Backtest_Progress" = TRUE,
@@ -22,9 +22,10 @@ my_params <- list("Backtest_Tag" = "NoDailyReinvest",
                   "Start_AUM" = 1e6,
                   "Reinvest_Daily" = FALSE)
 backtest_results <- Backtest_ClassifierAlgo(my_params)
+tmp_stats <- Calculate_AlgoPerformanceStats(backtest_results)
 
 my_params <- list("Backtest_Tag" = "WithDailyReinvest",
-                  "Model_XDataFile" = "Data/RegXData_London.csv",  # SmallTestFile.csv
+                  "Model_XDataFile" = "Data/SmallTestFile.csv",  # SmallTestFile.csv
                   "XData_To_Use" = c("Returns", "PC1", "PC2"),
                   "Fit_Window" = 250,
                   "Show_Backtest_Progress" = TRUE,
@@ -63,3 +64,15 @@ for (i in 1:ncol(backtest_results$CurrencyTarget_Returns)) {
   plot(cumsum(backtest_results$CurrencyTarget_Returns[[i]]), type="l", main=colnames(backtest_results$CurrencyTarget_Returns)[i])
 }
 # ---
+
+
+tmp_acc <- unlist(lapply(tmp_stats$Cross, function(d){d$Accuracy}))
+tmp_acc <- tmp_acc[order(tmp_acc, decreasing = TRUE)]
+
+tmp_imp <- unlist(lapply(tmp_stats$Cross, function(d){d$Impact}))
+tmp_imp <- tmp_imp[order(tmp_imp, decreasing = TRUE)]
+
+tmp_perf <- unlist(lapply(tmp_stats$Cross, function(d){d$Performance}))
+tmp_perf <- tmp_perf[order(tmp_perf, decreasing = TRUE)]
+
+
